@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ORDER_MANAGER
+  CUTTING_OPERATOR
+  TAILOR
+  QC_INSPECTOR
+  PACKING_STAFF
+  DELIVERY_COORDINATOR
+}
+
+enum ProductionStage {
+  CUTTING
+  STITCHING
+  QUALITY_CHECK
+  PACKING
+  DELIVERY
+}
+
+enum BatchStatus {
+  CREATED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum EventType {
+  STARTED
+  COMPLETED
+  REWORKED
+  REJECTED
+  ON_HOLD
+  CORRECTED
+}
+
+enum QcResult {
+  PENDING
+  PASSED
+  REWORK_REQUIRED
+  REJECTED
+}
+
+model AppSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id                   String              @id @default(cuid())
+  name                 String
+  email                String              @unique
+  phone                String?
+  passwordHash         String
+  role                 UserRole
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  events               ProductionEvent[]
+  assignments          OrderAssignment[]
+  statusUpdates        OrderStatusUpdate[]
+  managerNotesAuthored OrderManagerNote[]
+  laborCosts           LaborCostEntry[]
+  qcInspections        QcInspection[]
+  ordersCreated        Order[]             @relation("OrderCreator")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Order {
+  id                  String               @id @default(cuid())
+  orderNumber         String               @unique
+  customerId          String
+  customer            Customer             @relation(fields: [customerId], references: [id])
+  createdById         String?
+  createdBy           User?                @relation("OrderCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  garmentName         String
+  specification       String?              @db.Text
+  issueNumber         String?
+  processName         String?
+  salesOrderNumber    String?
+  productionManager   String?
+  receivedDate        DateTime?
+  inwardValue         Decimal?             @db.Decimal(12, 2)
+  qrToken             String?              @unique
+  estimatedCompletion DateTime?
+  currentStage        ProductionStage      @default(CUTTING)
+  dueDate             DateTime?
+  status              BatchStatus          @default(CREATED)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  batches             ProductionBatch[]
+  bomItems            BomItem[]
+  items               OrderItem[]
+  rawMaterials        RawMaterialReceipt[]
+  assignments         OrderAssignment[]
+  statusUpdates       OrderStatusUpdate[]
+  managerNotes        OrderManagerNote[]
+  laborCosts          LaborCostEntry[]
+  qcInspection        QcInspection?
+
+  @@index([createdById])
+}
+
+model QcInspection {
+  id                String           @id @default(cuid())
+  orderId           String           @unique
+  order             Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inspectorId       String
+  inspector         User             @relation(fields: [inspectorId], references: [id])
+  result            QcResult         @default(PENDING)
+  stitchingPassed   Boolean          @default(false)
+  measurementPassed Boolean          @default(false)
+  finishingPassed   Boolean          @default(false)
+  defectPhotoPath   String?          @db.Text
+  rejectionReason   String?          @db.Text
+  reworkStage       ProductionStage?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model LaborCostEntry {
+  id           String          @id @default(cuid())
+  orderId      String
+  order        Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stage        ProductionStage
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  amount       Decimal         @db.Decimal(12, 2)
+  note         String?         @db.Text
+  isApproved   Boolean         @default(false)
+  isAccepted   Boolean         @default(false)
+  responseNote String?         @db.Text
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([orderId, stage])
+  @@index([userId])
+}
+
+model OrderManagerNote {
+  id        String          @id @default(cuid())
+  orderId   String
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stage     ProductionStage
+  message   String          @db.Text
+  authorId  String
+  author    User            @relation(fields: [authorId], references: [id])
+  createdAt DateTime        @default(now())
+
+  @@index([orderId, stage, createdAt])
+}
+
+model OrderStatusUpdate {
+  id        String          @id @default(cuid())
+  orderId   String
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    BatchStatus
+  stage     ProductionStage
+  comment   String?         @db.Text
+  eta       DateTime?
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  createdAt DateTime        @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([userId])
+}
+
+model OrderAssignment {
+  id         String          @id @default(cuid())
+  orderId    String
+  order      Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stage      ProductionStage
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  assignedAt DateTime        @default(now())
+
+  @@unique([orderId, stage])
+  @@index([userId])
+}
+
+model OrderItem {
+  id                   String              @id @default(cuid())
+  orderId              String
+  order                Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemName             String
+  color                String?
+  clientOrderReference String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  sizeQuantities       OrderSizeQuantity[]
+
+  @@index([orderId])
+}
+
+model OrderSizeQuantity {
+  id          String    @id @default(cuid())
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  size        Int
+  quantity    Int       @default(0)
+
+  @@unique([orderItemId, size])
+  @@index([size])
+}
+
+model RawMaterialReceipt {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemCode  String?
+  itemName  String
+  color     String?
+  panna     Decimal? @db.Decimal(12, 2)
+  quantity  Decimal  @db.Decimal(12, 2)
+  unit      String   @default("m")
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model BomItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemName   String
+  unit       String
+  plannedQty Decimal  @db.Decimal(12, 2)
+  unitCost   Decimal  @db.Decimal(12, 2)
+  createdAt  DateTime @default(now())
+}
+
+model ProductionBatch {
+  id           String            @id @default(cuid())
+  orderId      String
+  order        Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  batchNumber  String            @unique
+  qrToken      String            @unique
+  quantity     Int
+  status       BatchStatus       @default(CREATED)
+  currentStage ProductionStage   @default(CUTTING)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  events       ProductionEvent[]
+}
+
+model ProductionEvent {
+  id           String          @id @default(cuid())
+  batchId      String
+  batch        ProductionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  stage        ProductionStage
+  type         EventType
+  quantity     Int?
+  laborCost    Decimal?        @db.Decimal(12, 2)
+  materialCost Decimal?        @db.Decimal(12, 2)
+  notes        String?         @db.Text
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  workstation  String?
+  createdAt    DateTime        @default(now())
+
+  @@index([batchId, createdAt])
+  @@index([stage, createdAt])
+}

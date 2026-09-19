@@ -1,0 +1,1 @@
+.logout-button{width:100%;margin-top:14px;background:transparent;border:1px solid #477461;border-radius:7px;color:#d6ebdf;padding:10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}.logout-button:hover{background:#275a44}@media(max-width:850px){.logout-button{color:var(--green);border-color:#c7d9ce;background:#fff}}

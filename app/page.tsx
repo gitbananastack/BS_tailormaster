@@ -14,12 +14,13 @@ export default async function Home() {
   if (!user) redirect("/login");
   const canManage = ["ADMIN", "ORDER_MANAGER"].includes(user.role);
   const assignments = await prisma.orderAssignment.findMany({ where: { userId: user.id }, select: { orderId: true, stage: true } });
-  const [orders, orderCount, activeBatches, completedBatches, workCandidates] = await Promise.all([
+  const [orders, orderCount, activeBatches, completedBatches, workCandidates, pendingBills] = await Promise.all([
     prisma.order.findMany({ take: 3, orderBy: { createdAt: "desc" }, include: { customer: true, items: { include: { sizeQuantities: true } } } }),
     prisma.order.count(),
     prisma.productionBatch.count({ where: { status: { in: ["CREATED", "IN_PROGRESS", "ON_HOLD"] } } }),
     prisma.productionBatch.count({ where: { status: "COMPLETED" } }),
     prisma.order.findMany({ where: { id: { in: assignments.map((assignment) => assignment.orderId) }, status: { in: ["CREATED", "IN_PROGRESS", "ON_HOLD"] } }, include: { statusUpdates: { where: { status: "COMPLETED" }, orderBy: { createdAt: "desc" }, take: 1 } } }),
+    canManage ? prisma.clientInvoice.count({ where: { status: { in: ["DRAFT", "ISSUED"] } } }) : Promise.resolve(0),
   ]);
   const myWork = workCandidates.filter((order) => assignments.some((assignment) => assignment.orderId === order.id && assignment.stage === order.currentStage));
   const newWork = myWork.filter((order) => order.createdAt >= freshCutoff || order.statusUpdates.some((update) => update.createdAt >= freshCutoff));
@@ -34,8 +35,10 @@ export default async function Home() {
           <a href="/my-work">My work bucket</a>
           <a href="/scan">Scan QR</a>
           {canManage ? <a href="/admin/productivity">Productivity</a> : null}
+          {canManage ? <a href="/admin/client-billing">Client billing</a> : null}
           {canManage ? <a href="#reports">Reports</a> : null}
           {user.role === "ADMIN" ? <a href="/admin/users">Administration</a> : null}
+          {user.role === "ADMIN" ? <a href="/admin/company">Company details</a> : null}
           {user.role === "ADMIN" ? <a href="/admin/monitoring">System monitoring</a> : null}
         </nav>
         <div className="sidebar-footer"><div className="profile"><b>{user.name}</b><small>{roleLabels[user.role]}</small></div><LogoutButton /></div>
@@ -47,6 +50,7 @@ export default async function Home() {
           <article><p>Active batches</p><b>{activeBatches}</b><small>Ready or in production</small></article>
           <article><p>Completed batches</p><b>{completedBatches}</b><small>All-time completed</small></article>
           <article><p>Garments received</p><b>{garmentsReceived}</b><small>Across recent job orders</small></article>
+          {canManage ? <a className={`billing-metric${pendingBills ? " has-pending" : ""}`} href="/admin/client-billing"><p>Pending bills</p><b>{pendingBills}</b><small>{pendingBills ? "Draft or awaiting payment →" : "No pending client bills"}</small></a> : null}
         </section><MobileNav active="dashboard" role={user.role} />
         <section className="workspace">
           <a className={`my-work-card${newWork.length ? " has-new-work" : ""}`} href="/my-work"><div><p className="eyebrow">Your production queue</p><h2>My work bucket</h2><p>{myWork.length ? `${myWork.length} job${myWork.length === 1 ? "" : "s"} waiting for you` : "No jobs are waiting for you"}</p></div><div className="my-work-count"><b>{myWork.length}</b><span>{newWork.length ? `${newWork.length} new handoff${newWork.length === 1 ? "" : "s"}` : "Open bucket →"}</span></div></a>

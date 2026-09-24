@@ -1,0 +1,32 @@
+.billing-status-help {
+  margin: -7px 0 14px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.invoice-status-select {
+  display: grid;
+  gap: 3px;
+}
+
+.invoice-status-select > span {
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.invoice-status-select select {
+  max-width: 132px;
+  padding: 6px;
+  border: 1px solid #cad8d0;
+  border-radius: 7px;
+  background: #f5faf7;
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.invoice-status-select.paid select { background: #e5f3eb; }
+.invoice-status-select.cancelled select { background: #f7eaea; color: #9c3939; }
+.invoice-status-select.draft select { background: #f4f1e7; color: #7d6422; }

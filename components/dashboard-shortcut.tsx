@@ -11,6 +11,8 @@ const screensWithDashboardLink = new Set([
   "/admin/users",
   "/admin/monitoring",
   "/admin/productivity",
+  "/admin/client-billing",
+  "/admin/company",
 ]);
 
 export function DashboardShortcut() {

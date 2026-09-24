@@ -33,6 +33,10 @@ import "./qc.css";
 import "./qc-multiple-photos.css";
 import "./qc-manager-gallery.css";
 import "./dashboard-shortcut.css";
+import "./company-settings.css";
+import "./client-billing.css";
+import "./dashboard-billing.css";
+import "./billing-status.css";
 
 export const metadata: Metadata = {
   title: "StitchFlow | Production Control",

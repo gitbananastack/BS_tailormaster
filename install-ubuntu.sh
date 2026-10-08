@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# StitchFlow single-file installer for Ubuntu 22.04/24.04.
+# StitchFlow single-file installer for Ubuntu 22.04/24.04/26.04.
 # Run from the project directory:
 #   sudo bash install-ubuntu.sh
 # Non-interactive example:
@@ -22,7 +22,7 @@ random_value() { openssl rand -hex "$1"; }
 
 [[ "${EUID}" -eq 0 ]] || die "Run this installer with sudo."
 source /etc/os-release
-[[ "${ID}" == "ubuntu" && ( "${VERSION_ID}" == "22.04" || "${VERSION_ID}" == "24.04" ) ]] || die "Use a fresh Ubuntu 22.04 or 24.04 VPS."
+[[ "${ID}" == "ubuntu" && ( "${VERSION_ID}" == "22.04" || "${VERSION_ID}" == "24.04" || "${VERSION_ID}" == "26.04" ) ]] || die "Use a fresh Ubuntu 22.04, 24.04, or 26.04 VPS."
 [[ ! -e "${APP_DIR}/.env" && ! -e /etc/systemd/system/stitchflow.service ]] || die "Existing installation detected. This installer is for fresh servers only."
 [[ "${APP_USER}" =~ ^[a-z_][a-z0-9_-]*$ ]] || die "Invalid APP_USER."
 [[ "${APP_DIR}" =~ ^/[A-Za-z0-9_/-]+$ && "${APP_DIR}" != "/" && "${APP_DIR}" != "${SOURCE_DIR}" ]] || die "Use a separate absolute APP_DIR containing only letters, numbers, underscores, slashes or hyphens."

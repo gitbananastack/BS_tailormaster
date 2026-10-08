@@ -4,7 +4,7 @@ This release contains the latest local project source, including uncommitted cha
 
 ## Server prerequisites
 
-Use a fresh Ubuntu 24.04 LTS or 22.04 LTS VPS with root/sudo SSH access. This installer configures MySQL, Nginx and systemd directly; do not run it on a CloudPanel, OpenLiteSpeed, Docker-template or existing production server. Allow inbound TCP 22 (SSH), 80 (HTTP), and 443 (HTTPS) in the Hostinger VPS firewall and any enabled OS firewall. Keep database port 3306 private. Ensure adequate free memory and disk for a Next.js production build.
+Use a fresh Ubuntu 22.04, 24.04, or 26.04 LTS VPS with root/sudo SSH access. This installer configures MySQL, Nginx and systemd directly; do not run it on a CloudPanel, OpenLiteSpeed, Docker-template or existing production server. Allow inbound TCP 22 (SSH), 80 (HTTP), and 443 (HTTPS) in the Hostinger VPS firewall and any enabled OS firewall. Keep database port 3306 private. Ensure adequate free memory and disk for a Next.js production build.
 
 Create a DNS A record for your domain pointing to the VPS public IPv4 address. If you use an AAAA record, it must point to this VPS too. Wait for DNS to resolve before installation with HTTPS.
 

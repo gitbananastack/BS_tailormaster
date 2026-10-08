@@ -20,7 +20,7 @@ mysql -u root -p < prisma/schema.mysql.sql
 
 ## Hostinger VPS installation
 
-For the VPS package dated 2026-10-08, follow [HOSTINGER-VPS-INSTALL.md](HOSTINGER-VPS-INSTALL.md). The installer targets a fresh Ubuntu 22.04 or 24.04 VPS.
+For the VPS package dated 2026-10-08, follow [HOSTINGER-VPS-INSTALL.md](HOSTINGER-VPS-INSTALL.md). The installer targets a fresh Ubuntu 22.04, 24.04, or 26.04 VPS.
 
 ## Hostinger managed Node.js hosting (separate from VPS)
 
@@ -36,7 +36,7 @@ After changing `APP_URL`, restart or redeploy the application and print fresh QR
 
 ## Single-file Ubuntu installation
 
-Copy the project to a fresh Ubuntu 22.04 or 24.04 server, then run:
+Copy the project to a fresh Ubuntu 22.04, 24.04, or 26.04 server, then run:
 
 ```bash
 chmod +x install-ubuntu.sh

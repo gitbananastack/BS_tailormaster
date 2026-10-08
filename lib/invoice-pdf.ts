@@ -3,8 +3,8 @@ import type { CompanySettings } from "@/lib/company-settings";
 
 type InvoiceLine = { description: string; quantity: number; rate: number; amount: number };
 type InvoiceData = {
-  invoiceNumber: string; amount: number; subtotal: number; gstPercent: number; gstAmount: number; lineItems: unknown; issueDate: Date; dueDate: Date | null; description: string | null; notes: string | null;
-  order: { orderNumber: string; garmentName: string; customer: { name: string; phone: string | null; address: string | null }; items: { itemName: string; sizeQuantities: { quantity: number }[] }[] };
+  invoiceNumber: string; amount: number; subtotal: number; gstPercent: number; gstAmount: number; lineItems: unknown; issueDate: Date; dueDate: Date | null; description: string | null; notes: string | null; clientName: string | null; clientPhone: string | null; clientAddress: string | null; clientGstin: string | null;
+  order: { orderNumber: string; garmentName: string; customer: { name: string; phone: string | null; address: string | null }; items: { designCode?: string | null; itemName: string; sizeQuantities: { quantity: number }[] }[] };
 };
 
 const currency = (value: number) => `INR ${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -35,16 +35,19 @@ export async function createInvoicePdf(invoice: InvoiceData, company: CompanySet
   doc.font("Helvetica").fontSize(8).fillColor(muted).text("Issue date", 350, 224).fillColor(ink).font("Helvetica-Bold").fontSize(9).text(invoice.issueDate.toLocaleDateString("en-IN"), 350, 237, { width: 82, align: "right" });
   if (invoice.dueDate) doc.font("Helvetica").fontSize(8).fillColor(muted).text("Due date", 455, 224).fillColor(ink).font("Helvetica-Bold").fontSize(9).text(invoice.dueDate.toLocaleDateString("en-IN"), 455, 237, { width: 92, align: "right" });
 
-  doc.roundedRect(left, 266, width, 73, 8).fill(soft);
+  doc.roundedRect(left, 266, width, 92, 8).fill(soft);
   doc.fillColor(green).font("Helvetica-Bold").fontSize(8).text("BILL TO", 64, 280);
-  doc.fillColor(ink).fontSize(13).text(invoice.order.customer.name, 64, 294, { width: 300 });
-  doc.font("Helvetica").fontSize(8).fillColor(muted).text([invoice.order.customer.address, invoice.order.customer.phone].filter(Boolean).join(" | ") || "Customer contact not provided", 64, 313, { width: 300 });
+  doc.fillColor(ink).fontSize(13).text(invoice.clientName || invoice.order.customer.name, 64, 294, { width: 300 });
+  const clientAddress = (invoice.clientAddress ?? invoice.order.customer.address ?? "").replace(/\s+/g, " ").trim();
+  const clientContact = [clientAddress, invoice.clientPhone ?? invoice.order.customer.phone].filter(Boolean).join(" | ") || "Customer contact not provided";
+  doc.font("Helvetica").fontSize(8).fillColor(muted).text(clientContact, 64, 312, { width: 300, height: 20, lineGap: 1, ellipsis: true });
+  if (invoice.clientGstin) doc.font("Helvetica-Bold").fontSize(8).fillColor(green).text(`GSTIN: ${invoice.clientGstin}`, 64, 338, { width: 300, height: 10, ellipsis: true });
   doc.fillColor(muted).font("Helvetica").fontSize(8).text("JOB ORDER", 410, 280, { width: 115, align: "right" });
   doc.fillColor(ink).font("Helvetica-Bold").fontSize(10).text(invoice.order.orderNumber, 410, 294, { width: 115, align: "right" });
-  doc.font("Helvetica").fontSize(8).fillColor(muted).text(invoice.order.garmentName, 410, 311, { width: 115, align: "right" });
+  doc.font("Helvetica").fontSize(8).fillColor(muted).text(`Design: ${invoice.order.items.map(item => item.designCode).filter(Boolean).join(" / ") || "Not set"}`, 410, 311, { width: 115, align: "right" });
 
   const items = validLines(invoice.lineItems);
-  let y = 368;
+  let y = 382;
   doc.rect(left, y, width, 25).fill(green);
   doc.fillColor("#FFFFFF").font("Helvetica-Bold").fontSize(8).text("#", 58, y + 8).text("DESCRIPTION / DESIGN CODE", 79, y + 8).text("QTY", 353, y + 8, { width: 38, align: "right" }).text("RATE", 401, y + 8, { width: 58, align: "right" }).text("AMOUNT", 469, y + 8, { width: 68, align: "right" });
   y += 25;

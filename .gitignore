@@ -6,3 +6,12 @@ node_modules
 *.log
 *.tsbuildinfo
 generated
+
+# Local credentials, generated releases, and customer files
+.env.*
+!.env.example
+*.env
+.DS_Store
+/output/
+/tmp/
+/public/uploads/

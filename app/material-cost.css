@@ -1,0 +1,15 @@
+@media (max-width: 750px) {
+  .material-head {
+    display: none;
+  }
+
+  .raw-material-summary {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .material-detail-table strong {
+    text-align: left;
+  }
+}

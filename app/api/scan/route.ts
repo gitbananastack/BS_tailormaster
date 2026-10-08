@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const id = searchParams.get("id");
   const token = searchParams.get("token");
   if (!id && !token) return Response.json({ error: "QR value is required." }, { status: 400 });
-  const order = await prisma.order.findFirst({ where: id ? { id } : { OR: [{ qrToken: token! }, { orderNumber: token! }] }, select: { id: true, orderNumber: true, garmentName: true, status: true } });
+  const order = await prisma.order.findFirst({ where: id ? { id } : { OR: [{ qrToken: token! }, { orderNumber: token! }] }, select: { id: true, orderNumber: true, garmentName: true, status: true, items: { select: { designCode: true } } } });
   if (!order) return Response.json({ error: "No job order was found for this QR code." }, { status: 404 });
   return Response.json(order);
 }

@@ -1,0 +1,23 @@
+.sidebar-profile-button{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:9px;padding:8px;border-radius:10px;background:#ffffff0a;color:#edf8f1;text-align:left}
+.sidebar-profile-button:hover{background:#ffffff14}
+.sidebar-profile-button>span{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#e7b24d;color:#17392d;font-size:11px;font-weight:900}
+.sidebar-profile-button>div{display:grid;gap:3px;min-width:0}
+.sidebar-profile-button b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-profile-button small{font-size:9px;color:#a9c7b5;text-transform:uppercase;letter-spacing:.07em}
+.sidebar-profile-button i{font-style:normal;color:#a9c7b5;font-size:20px}
+.profile-modal-backdrop{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:#102a2199;backdrop-filter:blur(4px)}
+.profile-modal{position:relative;width:min(440px,100%);padding:25px;border-radius:18px;background:#fff;color:#20382e;box-shadow:0 24px 70px #0e281e55}
+.profile-modal-close{position:absolute;right:14px;top:13px;width:32px;height:32px;border-radius:9px;background:#edf3ef;color:#4f685d;font-size:20px}
+.profile-modal header{display:flex;align-items:center;justify-content:flex-start;gap:14px;margin:0 35px 22px 0}
+.profile-modal header>span{display:grid;place-items:center;width:52px;height:52px;border-radius:15px;background:#1d6049;color:#fff;font-size:16px;font-weight:900}
+.profile-modal header p{font-size:9px;color:#718279;text-transform:uppercase;letter-spacing:.09em}
+.profile-modal header h2{margin-top:5px;font-size:21px}
+.profile-modal dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+.profile-modal dl>div{padding:13px;border-radius:11px;background:#f3f7f4;min-width:0}
+.profile-modal dt{font-size:9px;color:#74847c;text-transform:uppercase;letter-spacing:.06em}
+.profile-modal dd{margin:5px 0 0;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.profile-role-list{margin-top:17px;padding-top:16px;border-top:1px solid #e4ebe7}
+.profile-role-list>small{font-size:9px;color:#74847c;text-transform:uppercase;letter-spacing:.07em}
+.profile-role-list>div{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.profile-role-list span{padding:7px 9px;border-radius:99px;background:#e5f2eb;color:#226447;font-size:10px;font-weight:800}
+@media(max-width:520px){.profile-modal{padding:21px}.profile-modal dl{grid-template-columns:1fr}.profile-role-list span{font-size:9px}}

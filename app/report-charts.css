@@ -1,0 +1,16 @@
+.comparison-grid .comparison-chart-card{padding:16px;background:linear-gradient(145deg,#f7faf8,#eef6f1);border:1px solid #e1ebe5;overflow:hidden}
+.comparison-chart-card header{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:0 0 16px}
+.comparison-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#fff;color:#237051;font-size:17px;font-weight:900;box-shadow:0 4px 12px #173f300d}
+.comparison-chart-card header>div{display:grid;gap:3px;flex:1}
+.comparison-chart-card header div>span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.comparison-chart-card header strong{position:static;font-size:10px}
+.comparison-grid article>.comparison-bars{display:grid;gap:11px;margin:0}
+.comparison-bars>div{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:8px}
+.comparison-bars label{font-size:8px;color:#718179}
+.comparison-bars>div>span{display:block;height:13px;border-radius:99px;background:#e1e9e5;overflow:hidden}
+.comparison-bars i{display:block;height:100%;min-width:3px;border-radius:99px}
+.comparison-bars .previous-bar{background:#9eb3aa}
+.comparison-bars .current-bar{background:linear-gradient(90deg,#29785b,#56a27f)}
+.comparison-bars b{min-width:53px;text-align:right;font-size:9px;color:#254136;white-space:nowrap}
+.comparison-chart-card:nth-child(3) .current-bar,.comparison-chart-card:nth-child(4) .current-bar{background:linear-gradient(90deg,#c4802b,#e4aa58)}
+@media(max-width:600px){.comparison-chart-card header{align-items:center;flex-direction:row}.comparison-bars>div{grid-template-columns:42px minmax(0,1fr) auto}.comparison-bars b{min-width:45px;font-size:8px}}

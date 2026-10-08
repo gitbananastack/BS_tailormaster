@@ -10,6 +10,9 @@ export type Inspection = {
   finishingPassed: boolean;
   rejectionReason: string | null;
   reworkStage: string | null;
+  reworkTailorIds?: unknown;
+  reworkDesignCodes?: unknown;
+  updatedAt?: string;
   defectPhotoPath: string | null;
 } | null;
 
@@ -29,11 +32,15 @@ function photoPaths(value: string | null | undefined) {
   }
 }
 
-export function QcInspection({ orderId, inspection, canInspect }: { orderId: string; inspection: Inspection; canInspect: boolean }) {
+function stringArray(value: unknown) { return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []; }
+
+export function QcInspection({ orderId, inspection, canInspect, designs = [], tailors = [] }: { orderId: string; inspection: Inspection; canInspect: boolean; designs?: { code: string; name?: string }[]; tailors?: { id: string; name: string }[] }) {
   const router = useRouter();
   const [result, setResult] = useState(inspection?.result === "PENDING" || !inspection ? "PASSED" : inspection.result);
   const [reason, setReason] = useState(inspection?.rejectionReason || "");
   const [reworkStage, setRework] = useState(inspection?.reworkStage || "STITCHING");
+  const [reworkTailorIds, setReworkTailorIds] = useState<string[]>(stringArray(inspection?.reworkTailorIds));
+  const [reworkDesignCodes, setReworkDesignCodes] = useState<string[]>(stringArray(inspection?.reworkDesignCodes));
   const [checks, setChecks] = useState({
     stitching: inspection?.stitchingPassed || false,
     measurement: inspection?.measurementPassed || false,
@@ -46,18 +53,27 @@ export function QcInspection({ orderId, inspection, canInspect }: { orderId: str
   const savedPhotos = photoPaths(inspection?.defectPhotoPath);
 
   async function submit() {
+    if (result === "PASSED" && passedChecks !== checklist.length) { setMessage("Complete all three checks before marking QC as passed."); return; }
+    if (result !== "PASSED" && !reason.trim()) { setMessage("Add a reason for rejection or rework."); return; }
+    if (result === "REWORK_REQUIRED" && reworkStage === "STITCHING" && !reworkDesignCodes.length) { setMessage("Select at least one design code for stitching rework."); return; }
+    if (result === "REWORK_REQUIRED" && reworkStage === "STITCHING" && !reworkTailorIds.length) { setMessage("Select at least one assigned tailor for stitching rework."); return; }
     setSaving(true);
+    setMessage("");
+    try {
     const form = new FormData();
     form.set("result", result);
     form.set("reason", reason);
     form.set("reworkStage", reworkStage);
+    reworkTailorIds.forEach(id => form.append("reworkTailorIds", id));
+    reworkDesignCodes.forEach(code => form.append("reworkDesignCodes", code));
     Object.entries(checks).forEach(([key, value]) => form.set(key, String(value)));
     photos.forEach((photo) => form.append("photos", photo));
     const response = await fetch(`/api/orders/${orderId}/qc`, { method: "POST", body: form });
     const body = await response.json();
     setMessage(response.ok ? "QC inspection saved." : body.error || "Unable to save QC.");
-    setSaving(false);
     if (response.ok) router.refresh();
+    } catch { setMessage("Unable to save the inspection. Please try again."); }
+    finally { setSaving(false); }
   }
 
   const savedResult = inspection?.result || "PENDING";
@@ -99,7 +115,7 @@ export function QcInspection({ orderId, inspection, canInspect }: { orderId: str
                 <option value="REWORK_REQUIRED">Rework required</option>
                 <option value="REJECTED">Rejected</option>
               </select>
-              <small>{result === "PASSED" ? "Packing can begin after you save." : "The order will not move to Packing."}</small>
+              <small>{result === "PASSED" ? "Save the passed inspection, then complete this stage in the order workspace." : "The order will not move to Packing."}</small>
             </label>
 
             {result === "REWORK_REQUIRED" ? (
@@ -112,6 +128,12 @@ export function QcInspection({ orderId, inspection, canInspect }: { orderId: str
                 </select>
               </label>
             ) : null}
+
+            {result === "REWORK_REQUIRED" && reworkStage === "STITCHING" ? <div className="qc-rework-scope">
+              <div className="qc-rework-scope-heading"><div><b>Stitching rework assignment</b><span>Choose the affected designs and responsible tailors.</span></div><strong>{reworkDesignCodes.length} designs · {reworkTailorIds.length} tailors</strong></div>
+              <fieldset><legend>Design codes</legend><div className="qc-rework-options">{designs.map(design => <label className={reworkDesignCodes.includes(design.code) ? "selected" : ""} key={design.code}><input type="checkbox" checked={reworkDesignCodes.includes(design.code)} onChange={() => setReworkDesignCodes(current => current.includes(design.code) ? current.filter(code => code !== design.code) : [...current, design.code])} /><span><b>{design.code}</b><small>{design.name || "Order design"}</small></span></label>)}</div>{!designs.length ? <p>No design codes are available on this order.</p> : null}</fieldset>
+              <fieldset><legend>Assigned tailors</legend><div className="qc-rework-options">{tailors.map(tailor => <label className={reworkTailorIds.includes(tailor.id) ? "selected" : ""} key={tailor.id}><input type="checkbox" checked={reworkTailorIds.includes(tailor.id)} onChange={() => setReworkTailorIds(current => current.includes(tailor.id) ? current.filter(id => id !== tailor.id) : [...current, tailor.id])} /><span><b>{tailor.name}</b><small>{reworkTailorIds.includes(tailor.id) ? "Assigned to rework" : "Available for rework"}</small></span></label>)}</div>{!tailors.length ? <p>Assign tailors to the Stitching stage before creating rework.</p> : null}</fieldset>
+            </div> : null}
 
             {result !== "PASSED" ? (
               <label className="qc-field qc-reason">
@@ -130,7 +152,7 @@ export function QcInspection({ orderId, inspection, canInspect }: { orderId: str
           </div>
 
           <div className="qc-submit-row">
-            <p className={message ? "has-message" : ""} aria-live="polite">{message || "Your inspection will be recorded in the order history."}</p>
+            <p className={message ? "has-message" : ""} aria-live="polite">{message || "Save your inspection before completing the QC stage."}</p>
             <button className="primary" disabled={saving} onClick={submit}>{saving ? "Saving inspection…" : "Save QC inspection"}</button>
           </div>
         </div>
@@ -140,6 +162,8 @@ export function QcInspection({ orderId, inspection, canInspect }: { orderId: str
             <span aria-hidden="true">{inspection?.result === "PASSED" ? "✓" : "○"}</span>
             <p>{inspection?.result === "PASSED" ? "QC passed — this order can proceed to Packing." : inspection?.result?.replaceAll("_", " ") || "QC inspection pending."}</p>
           </div>
+          <div className="qc-readonly-checks">{checklist.map(({ key, title }) => { const passed = key === "stitching" ? inspection?.stitchingPassed : key === "measurement" ? inspection?.measurementPassed : inspection?.finishingPassed; return <div key={key} className={passed ? "passed" : "pending"}><span aria-hidden="true">{passed ? "✓" : "○"}</span><div><b>{title}</b><small>{passed ? "Check passed" : "Not passed yet"}</small></div></div>; })}</div>
+          {inspection?.rejectionReason && <div className="qc-reason-summary"><b>Inspector’s notes</b><p>{inspection.rejectionReason}</p>{inspection.reworkStage && <small>Rework stage: {inspection.reworkStage.replaceAll("_", " ")}</small>}{stringArray(inspection.reworkDesignCodes).length ? <small>Designs: {stringArray(inspection.reworkDesignCodes).join(" · ")}</small> : null}{stringArray(inspection.reworkTailorIds).length ? <small>Assigned tailors: {tailors.filter(tailor => stringArray(inspection.reworkTailorIds).includes(tailor.id)).map(tailor => tailor.name).join(" · ")}</small> : null}</div>}
           <div className="qc-manager-photos">
             <div className="qc-photo-gallery-heading"><div><b>QC defect photos</b><small>Uploaded by the quality inspector</small></div><span>{savedPhotos.length} {savedPhotos.length === 1 ? "photo" : "photos"}</span></div>
             {savedPhotos.length ? <div className="qc-photo-gallery">{savedPhotos.map((photo, index) => <a href={photo} target="_blank" rel="noreferrer" key={`${photo}-${index}`}><img src={photo} alt={`QC defect photo ${index + 1}`} /><span><b>Photo {index + 1}</b><small>Open original ↗</small></span></a>)}</div> : <div className="qc-no-photos"><span aria-hidden="true">▧</span><p>No defect photos were uploaded for this inspection.</p></div>}

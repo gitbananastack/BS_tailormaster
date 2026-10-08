@@ -1,15 +1,16 @@
 "use client";
 
+import { loginReturnPath } from "@/lib/login-return";
 import { useState } from "react";
 
-export function LoginForm() {
+export function LoginForm({ next = "/" }: { next?: string }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(formData: FormData) {
     setLoading(true); setError("");
     const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: formData.get("username"), password: formData.get("password") }) });
-    if (response.ok) window.location.assign("/");
+    if (response.ok) window.location.assign(loginReturnPath(next));
     else { const result = await response.json(); setError(result.error || "Unable to sign in."); setLoading(false); }
   }
 

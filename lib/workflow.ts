@@ -1,5 +1,6 @@
 export const workflowStages = [
   { key: "CUTTING", label: "Cutting", description: "Fabric cut per BOM" },
+  { key: "FUSING", label: "Fusing", description: "Interlining and fusing when required" },
   { key: "STITCHING", label: "Stitching", description: "Assembly and sewing" },
   { key: "QUALITY_CHECK", label: "Quality Check", description: "Inspection and rework decision" },
   { key: "PACKING", label: "Packing", description: "Final packing" },

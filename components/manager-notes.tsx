@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Note = { id: string; stage: string; message: string; createdAt: string; author: { name: string } };
-const labels: Record<string, string> = { CUTTING: "Cutting", STITCHING: "Stitching", QUALITY_CHECK: "Quality check", PACKING: "Packing", DELIVERY: "Delivery" };
+const labels: Record<string, string> = { CUTTING: "Cutting", FUSING: "Fusing", STITCHING: "Stitching", QUALITY_CHECK: "Quality check", PACKING: "Packing", DELIVERY: "Delivery" };
 
 export function ManagerNotes({ orderId, currentStage, notes, canManage }: { orderId: string; currentStage: string; notes: Note[]; canManage: boolean }) {
   const router = useRouter(); const [stage, setStage] = useState(currentStage); const [message, setMessage] = useState(""); const [feedback, setFeedback] = useState(""); const [saving, setSaving] = useState(false);

@@ -1,3 +1,4 @@
+import { hasAnyRole } from "@/lib/roles";
 import { currentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { randomUUID } from "crypto";
@@ -13,13 +14,17 @@ const schema = z.object({
   lineItems: z.array(lineItemSchema).min(1).max(100),
   gstPercent: z.coerce.number().min(0).max(100).default(0),
   gstAmount: z.coerce.number().min(0).max(100000000).default(0),
+  clientName: z.string().trim().min(1).max(191),
+  clientPhone: z.string().trim().max(30).optional(),
+  clientAddress: z.string().trim().max(2000).optional(),
+  clientGstin: z.string().trim().max(30).optional(),
   notes: z.string().trim().max(4000).optional(),
   dueDate: z.string().optional(),
 });
 
 export async function POST(request: Request) {
   const actor = await currentUser();
-  if (!actor?.isActive || !["ADMIN", "ORDER_MANAGER"].includes(actor.role)) return Response.json({ error: "Admin or Order Manager access required." }, { status: 403 });
+  if (!actor?.isActive || !hasAnyRole(actor, ["ADMIN", "ORDER_MANAGER"])) return Response.json({ error: "Admin or Order Manager access required." }, { status: 403 });
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) return Response.json({ error: "Add at least one valid billing item with its quantity and rate." }, { status: 400 });
   const order = await prisma.order.findUnique({ where: { id: parsed.data.orderId }, select: { id: true } });
@@ -30,6 +35,6 @@ export async function POST(request: Request) {
   const amount = Number((subtotal + gstAmount).toFixed(2));
   if (amount <= 0) return Response.json({ error: "The invoice total must be greater than zero." }, { status: 400 });
   const now = new Date();
-  const invoice = await prisma.clientInvoice.create({ data: { invoiceNumber: `INV-${now.getFullYear()}-${String(Date.now()).slice(-8)}`, shareToken: randomUUID(), orderId: order.id, lineItems, subtotal, gstPercent: parsed.data.gstPercent, gstAmount, amount, notes: parsed.data.notes || null, dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null, createdById: actor.id }, include: { order: { include: { customer: true } } } });
+  const invoice = await prisma.clientInvoice.create({ data: { invoiceNumber: `INV-${now.getFullYear()}-${String(Date.now()).slice(-8)}`, shareToken: randomUUID(), orderId: order.id, clientName: parsed.data.clientName, clientPhone: parsed.data.clientPhone || null, clientAddress: parsed.data.clientAddress || null, clientGstin: parsed.data.clientGstin?.toUpperCase() || null, lineItems, subtotal, gstPercent: parsed.data.gstPercent, gstAmount, amount, notes: parsed.data.notes || null, dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null, createdById: actor.id }, include: { order: { include: { customer: true } } } });
   return Response.json({ ...invoice, amount: invoice.amount.toString(), subtotal: invoice.subtotal.toString(), gstPercent: invoice.gstPercent.toString(), gstAmount: invoice.gstAmount.toString(), issueDate: invoice.issueDate.toISOString(), dueDate: invoice.dueDate?.toISOString() || null, createdAt: invoice.createdAt.toISOString() });
 }

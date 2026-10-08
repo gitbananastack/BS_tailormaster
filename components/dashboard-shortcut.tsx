@@ -5,12 +5,16 @@ import { usePathname } from "next/navigation";
 const screensWithDashboardLink = new Set([
   "/",
   "/login",
+  "/install",
   "/scan",
   "/my-work",
   "/orders/new",
   "/admin/users",
   "/admin/monitoring",
   "/admin/productivity",
+  "/admin/reports",
+  "/admin/reports/orders",
+  "/admin/reports/tailors",
   "/admin/client-billing",
   "/admin/company",
 ]);

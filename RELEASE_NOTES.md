@@ -1,5 +1,13 @@
 # StitchFlow Release Notes
 
+## 2026.10 — Stage handoff and concurrent-update performance
+
+- A completed stage now hands the order to the next stage as **Ready** (`CREATED`) instead of starting work automatically.
+- The completed stage's ETA is cleared at handoff; the next operator enters a new ETA for their own stage.
+- A stage's first status update must be **In Progress** before it can be completed, held, cancelled, or skipped.
+- Simultaneous updates to the same order detect a stale stage and return a refresh message instead of overwriting another user's transition.
+- Added an index for order, stage, worker, and update time, and limited large histories loaded by production screens.
+
 ## 2026.09 — Production workflow and billing release
 
 Release date: 30 September 2026

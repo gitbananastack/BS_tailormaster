@@ -167,6 +167,7 @@ CREATE TABLE `OrderStatusUpdate` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `OrderStatusUpdate_orderId_createdAt_idx`(`orderId`, `createdAt`),
+    INDEX `OrderStatusUpdate_orderId_stage_userId_createdAt_idx`(`orderId`, `stage`, `userId`, `createdAt`),
     INDEX `OrderStatusUpdate_userId_idx`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

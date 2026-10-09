@@ -15,7 +15,7 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ id
   const actor = await currentUser();
   if (!actor) redirect(`/login?next=${encodeURIComponent(`/orders/${id}/status`)}`);
   const canManage = hasAnyRole(actor, ["ADMIN", "ORDER_MANAGER"]);
-  const order = await prisma.order.findUnique({ where: { id }, include: { customer: true, qcInspection: true, assignments: { select: { userId: true, stage: true, user: { select: { name: true } } } }, statusUpdates: { include: { user: { select: { name: true } } }, orderBy: { createdAt: "desc" } }, items: { include: { sizeQuantities: true } } } });
+  const order = await prisma.order.findUnique({ where: { id }, include: { customer: true, qcInspection: true, assignments: { select: { userId: true, stage: true, user: { select: { name: true } } } }, statusUpdates: { include: { user: { select: { name: true } } }, orderBy: { createdAt: "desc" }, take: 100 }, items: { include: { sizeQuantities: true } } } });
   if (!order) notFound();
   const stageIndex = stages.indexOf(order.currentStage);
   const quantity = order.items.flatMap(item => item.sizeQuantities).reduce((total, line) => total + line.quantity, 0);

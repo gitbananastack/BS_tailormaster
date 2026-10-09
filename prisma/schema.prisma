@@ -227,6 +227,7 @@ model OrderStatusUpdate {
   createdAt DateTime        @default(now())
 
   @@index([orderId, createdAt])
+  @@index([orderId, stage, userId, createdAt])
   @@index([userId])
 }
 

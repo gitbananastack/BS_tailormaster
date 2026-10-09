@@ -63,6 +63,19 @@ sudo mysqldump --single-transaction --routines --triggers stitchflow > stitchflo
 sudo systemctl restart stitchflow
 ```
 
+## Automated application updates
+
+For an existing installation cloned from GitHub, run the bundled updater from the checkout:
+
+```bash
+cd /home/bananastackadmin/BS_tailormaster
+sudo ./deploy-update.sh
+```
+
+The updater pulls `origin/main`, creates timestamped database, `.env`, and upload backups under `/var/backups/stitchflow`, preserves `/opt/stitchflow/.env` and `/opt/stitchflow/public/uploads`, applies pending Prisma migrations, builds the application, restarts `stitchflow`, and checks `/api/health`. It does not modify Nginx, so the upload-size and `/uploads/qc/` alias configuration remain in place.
+
+If an older manual installation has the complete 16-table SQL schema but no Prisma migration history, the updater records the known schema baseline before applying newer migrations. Any unexpected table count stops the deployment for manual review.
+
 No local .env secrets, customer uploads, node_modules, build output or database data are included in this release. Packages must be downloaded and built on the VPS. Ubuntu installation and MySQL import have not been executed against your VPS.
 
 Hostinger reference: https://www.hostinger.com/my/tutorials/deploy-node-js-application/

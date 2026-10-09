@@ -34,6 +34,15 @@ Use a Hostinger Business or Cloud plan with Node.js support.
 
 After changing `APP_URL`, restart or redeploy the application and print fresh QR labels. Previously printed QR codes keep the URL that was encoded when they were generated.
 
+### Update an existing VPS installation
+
+Run the automated updater from the Git checkout. It backs up the database, environment, and QC uploads; preserves server configuration and uploaded files; deploys migrations and code; and verifies the service:
+
+```bash
+cd /home/bananastackadmin/BS_tailormaster
+sudo ./deploy-update.sh
+```
+
 ## Single-file Ubuntu installation
 
 Copy the project to a fresh Ubuntu 22.04, 24.04, or 26.04 server, then run:

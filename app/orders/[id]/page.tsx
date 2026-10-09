@@ -7,6 +7,7 @@ import { QcInspection } from "@/components/qc-inspection";
 import { currentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
+import { activeStitchingReworkTailorIds } from "@/lib/qc-rework";
 
 const sizes = [38, 40, 42, 44, 46, 48, 50];
 
@@ -21,7 +22,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   ]);
   if (!order) notFound();
   const total = order.items.flatMap((item) => item.sizeQuantities).reduce((sum, line) => sum + line.quantity, 0);
-  const reworkTailorIds = order.qcInspection?.result === "REWORK_REQUIRED" && order.qcInspection.reworkStage === "STITCHING" && Array.isArray(order.qcInspection.reworkTailorIds) ? order.qcInspection.reworkTailorIds.filter((item): item is string => typeof item === "string") : [];
+  const reworkTailorIds = activeStitchingReworkTailorIds(order.currentStage, order.qcInspection);
   const isAssignedCurrentWorker = order.assignments.some((assignment) => assignment.stage === order.currentStage && canWorkStage(actor, order.currentStage, assignment.userId)) && (!reworkTailorIds.length || reworkTailorIds.includes(actor.id));
   const canUpdateStatus = order.currentStage === "STITCHING" ? isAssignedCurrentWorker : canAssign || isAssignedCurrentWorker;
   const isAssignedQcWorker = hasRole(actor, "QC_INSPECTOR") && order.currentStage === "QUALITY_CHECK" && order.assignments.some((assignment) => assignment.stage === "QUALITY_CHECK" && assignment.userId === actor.id);

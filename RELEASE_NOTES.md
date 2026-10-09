@@ -7,6 +7,7 @@
 - A stage's first status update must be **In Progress** before it can be completed, held, cancelled, or skipped.
 - Simultaneous updates to the same order detect a stale stage and return a refresh message instead of overwriting another user's transition.
 - Added an index for order, stage, worker, and update time, and limited large histories loaded by production screens.
+- Fixed completed Stitching rework so the order returns to the assigned QC inspector's work bucket and update screen.
 
 ## 2026.09 — Production workflow and billing release
 

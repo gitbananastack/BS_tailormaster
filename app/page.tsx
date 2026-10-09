@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { MobileNav } from "@/components/mobile-nav";
 import { LogoutButton } from "@/components/logout-button";
 import { SidebarProfile } from "@/components/sidebar-profile";
+import { activeStitchingReworkTailorIds } from "@/lib/qc-rework";
 
 const roleLabels: Record<string, string> = { ADMIN: "Administrator", ORDER_MANAGER: "Order manager", CUTTING_OPERATOR: "Cutting operator", FUSING_OPERATOR: "Fusing operator", TAILOR: "Tailor", QC_INSPECTOR: "QC inspector", PACKING_STAFF: "Packing staff", DELIVERY_COORDINATOR: "Delivery coordinator" };
 
@@ -31,7 +32,7 @@ export default async function Home() {
     canManage ? prisma.clientInvoice.count({ where: { issueDate: { gte: dashboardCutoff }, status: { in: ["DRAFT", "ISSUED"] } } }) : Promise.resolve(0),
     prisma.qcInspection.count({ where: { result: "REWORK_REQUIRED", updatedAt: { gte: dashboardCutoff } } }),
   ]);
-  const myWork = workCandidates.filter((order) => { const selected = order.qcInspection?.result === "REWORK_REQUIRED" && order.qcInspection.reworkStage === "STITCHING" && Array.isArray(order.qcInspection.reworkTailorIds) ? order.qcInspection.reworkTailorIds.filter((item): item is string => typeof item === "string") : []; return assignments.some((assignment) => assignment.orderId === order.id && assignment.stage === order.currentStage) && (!selected.length || selected.includes(user.id)); });
+  const myWork = workCandidates.filter((order) => { const selected = activeStitchingReworkTailorIds(order.currentStage, order.qcInspection); return assignments.some((assignment) => assignment.orderId === order.id && assignment.stage === order.currentStage) && (!selected.length || selected.includes(user.id)); });
   const newWork = myWork.filter((order) => order.createdAt >= freshCutoff || order.statusUpdates.some((update) => update.createdAt >= freshCutoff));
   const garmentsReceived = quantities._sum.quantity || 0;
   const onHoldCount = statusGroups.find(group => group.status === "ON_HOLD")?._count || 0;

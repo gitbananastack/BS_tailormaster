@@ -6,6 +6,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { currentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { activeStitchingReworkTailorIds } from "@/lib/qc-rework";
 
 const labels: Record<string, string> = { CUTTING: "Cutting", FUSING: "Fusing", STITCHING: "Stitching", QUALITY_CHECK: "Quality check", PACKING: "Packing", DELIVERY: "Delivery" };
 
@@ -18,7 +19,7 @@ export default async function MyWorkPage({ searchParams }: { searchParams: Promi
   if (!user) redirect("/login");
   const assignments = await prisma.orderAssignment.findMany({ where: { userId: user.id }, select: { orderId: true, stage: true } });
   const orders = await prisma.order.findMany({ where: { AND: [orderFilters(params)], id: { in: assignments.map((assignment) => assignment.orderId) }, status: { in: ["CREATED", "IN_PROGRESS", "ON_HOLD"] } }, include: { customer: true, qcInspection: { select: { result: true, reworkStage: true, reworkTailorIds: true } }, items: { include: { sizeQuantities: true } }, statusUpdates: { where: { status: "COMPLETED" }, orderBy: { createdAt: "desc" }, take: 1 } }, orderBy: { updatedAt: "desc" } });
-  const work = orders.filter((order) => { const selected = order.qcInspection?.result === "REWORK_REQUIRED" && order.qcInspection.reworkStage === "STITCHING" && Array.isArray(order.qcInspection.reworkTailorIds) ? order.qcInspection.reworkTailorIds.filter((item): item is string => typeof item === "string") : []; return assignments.some((assignment) => assignment.orderId === order.id && assignment.stage === order.currentStage) && (!selected.length || selected.includes(user.id)); });
+  const work = orders.filter((order) => { const selected = activeStitchingReworkTailorIds(order.currentStage, order.qcInspection); return assignments.some((assignment) => assignment.orderId === order.id && assignment.stage === order.currentStage) && (!selected.length || selected.includes(user.id)); });
   const newCount = work.filter((order) => order.createdAt >= freshCutoff || order.statusUpdates.some((update) => update.createdAt >= freshCutoff)).length;
   const pages = Math.max(1, Math.ceil(work.length / 6));
   const page = pageNumber(params.page, work.length, 6);

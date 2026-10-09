@@ -53,7 +53,16 @@ finish() {
 trap finish EXIT
 
 log "Pulling the latest main branch"
-runuser -u "${SOURCE_OWNER}" -- git -C "${SOURCE_DIR}" pull --ff-only origin main
+if [[ "${STITCHFLOW_DEPLOY_REEXEC:-0}" != "1" ]]; then
+  PREVIOUS_HEAD="$(git -C "${SOURCE_DIR}" rev-parse HEAD)"
+  runuser -u "${SOURCE_OWNER}" -- git -C "${SOURCE_DIR}" pull --ff-only origin main
+  CURRENT_HEAD="$(git -C "${SOURCE_DIR}" rev-parse HEAD)"
+  if [[ "${PREVIOUS_HEAD}" != "${CURRENT_HEAD}" ]] && ! git -C "${SOURCE_DIR}" diff --quiet "${PREVIOUS_HEAD}" "${CURRENT_HEAD}" -- deploy-update.sh; then
+    log "Restarting with the updated deployment script"
+    trap - EXIT
+    exec env STITCHFLOW_DEPLOY_REEXEC=1 "${SOURCE_DIR}/deploy-update.sh"
+  fi
+fi
 
 log "Backing up the database, environment, and QC uploads"
 mkdir -p "${BACKUP_DIR}/${STAMP}"
